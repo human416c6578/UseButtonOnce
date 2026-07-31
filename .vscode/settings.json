@@ -1,8 +1,0 @@
-{
-    "amxxpawn.compiler.includePaths": [
-        "D:/Workspace/programing/pawn/compiler/include",
-        "D:/Workspace/programing/pawn/projects/playerskins/include"
-    ],
-    "amxxpawn.language.webApiLinks": true,
-    "editor.insertSpaces": false
-}
