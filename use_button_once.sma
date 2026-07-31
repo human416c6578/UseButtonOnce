@@ -199,6 +199,7 @@ setButtons(){
 fillButtons(const szClass[]){
 	new ent = -1;
 	while((ent = engfunc(EngFunc_FindEntityByString,ent ,"classname", szClass)) != 0){
+		server_print("%d", ent);
 		gEnt[giPointer++]=ent;
 		set_pev(ent, pev_iuser4, giPointer);
 	}
@@ -269,7 +270,7 @@ public fwButtonUsed(this, idcaller, idactivator, use_type, Float:value){
 	
 	
 	set_task(0.1,"setDelay",this);
-	~
+	
 	return HAM_IGNORED;
 }
 public setDelay(this){
