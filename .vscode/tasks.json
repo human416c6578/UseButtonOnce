@@ -1,0 +1,42 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile AMXX Plugin with all debug (D3)",
+            "type": "shell",
+            "windows": {
+                "command": "D:/Workspace/programing/pawn/compiler/amxxpc.exe"
+            },
+            "args": [
+                "${file}",
+                "-i${workspaceFolder}/include",
+                "-o${workspaceFolder}/bin/${fileBasenameNoExtension}.amxx",
+                "-d3"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "Compile AMXX Plugin",
+            "type": "shell",
+            "windows": {
+                "command": "D:/Workspace/programing/pawn/compiler/amxxpc.exe"
+            },
+            "args": [
+                "${file}",
+                "-i${workspaceFolder}/include",
+                "-o${workspaceFolder}/bin/${fileBasenameNoExtension}.amxx"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
