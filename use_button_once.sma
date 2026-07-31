@@ -199,7 +199,6 @@ setButtons(){
 fillButtons(const szClass[]){
 	new ent = -1;
 	while((ent = engfunc(EngFunc_FindEntityByString,ent ,"classname", szClass)) != 0){
-		server_print("%d", ent);
 		gEnt[giPointer++]=ent;
 		set_pev(ent, pev_iuser4, giPointer);
 	}
