@@ -269,7 +269,7 @@ public fwButtonUsed(this, idcaller, idactivator, use_type, Float:value){
 	
 	
 	set_task(0.1,"setDelay",this);
-	
+	~
 	return HAM_IGNORED;
 }
 public setDelay(this){
