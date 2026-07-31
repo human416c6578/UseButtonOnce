@@ -53,14 +53,19 @@ new gcvarMessage, gcvarRestore;
 
 #define TASK_SHOWMENU 432
 #define TASK_RES 123
+#define TASK_FREERUN_TIMER 700
+#define TASK_FREERUN_END 701
+#define TASK_DELAY 10000
 
 #define MAX_ROUNDS 999
 
 #define KeysFFVote (1<<0)|(1<<1) // Keys: 12
 
 new gcvarFRVoteTime;
+new gcvarFRTime;
 
 new giVoteStart, giVoteTime;
+new giFRTimeLeft;
 
 new bool:gbFreeRun=false;
 new bool:gbVote=false;
@@ -100,6 +105,8 @@ public plugin_init() {
 	gcvarFreeRun=register_cvar("amx_buttons_freerun","1");
 	//Vote time
 	gcvarFRVoteTime=register_cvar("amx_freerun_votetime","10");
+	//FreeRun time limit in seconds, 0 - till the round end
+	gcvarFRTime=register_cvar("amx_freerun_time","60");
 	
 	//Interval of message
 	gcvarMessage=register_cvar("amx_freerun_info","120.0",0,120.0);
@@ -199,6 +206,10 @@ setButtons(){
 fillButtons(const szClass[]){
 	new ent = -1;
 	while((ent = engfunc(EngFunc_FindEntityByString,ent ,"classname", szClass)) != 0){
+		if(giPointer >= MAX_BUTTONS){
+			log_amx("UseButtonOnce: too many %s buttons on the map, limit is %d", szClass, MAX_BUTTONS);
+			return;
+		}
 		gEnt[giPointer++]=ent;
 		set_pev(ent, pev_iuser4, giPointer);
 	}
@@ -230,6 +241,8 @@ restoreButton(ent){
 public ResetButtons(){
 	gbFreeRun=false;
 	gbVote=false;
+	remove_task(TASK_FREERUN_TIMER);
+	remove_task(TASK_FREERUN_END);
 	new bool:bRestore=get_pcvar_num(gcvarRestore)!=0;
 	for(new i=0;i<MAX_BUTTONS;i++){
 		gUsed[i]=gOnStart[i];
@@ -241,6 +254,7 @@ public ResetButtons(){
 }
 public fwButtonUsed(this, idcaller, idactivator, use_type, Float:value){
 	if(idcaller!=idactivator) return HAM_IGNORED;
+	if(!is_user_connected(idcaller)) return HAM_IGNORED;
 	
 	if(pev(this, pev_frame) > 0.0)
 		 return HAM_IGNORED;
@@ -268,13 +282,16 @@ public fwButtonUsed(this, idcaller, idactivator, use_type, Float:value){
 	}
 	
 	
-	set_task(0.1,"setDelay",this);
+	set_task(0.1, "setDelay", this + TASK_DELAY);
 	
 	return HAM_IGNORED;
 }
-public setDelay(this){
-	new index=get_ent_index(this);
-	set_pev(this, pev_nextthink, pev(this, pev_ltime)+gDelay[index]+0.01);
+public setDelay(tid){
+	new ent = tid - TASK_DELAY;
+	new index=get_ent_index(ent);
+	if(index==-1)
+		return;
+	set_pev(ent, pev_nextthink, pev(ent, pev_ltime)+gDelay[index]+0.01);
 }
 
 //MENU--------------
@@ -670,11 +687,36 @@ makeFreeRun(bool:bFR=true){
 	reset();
 	giRounds=0;
 	
+	remove_task(TASK_FREERUN_TIMER);
+	remove_task(TASK_FREERUN_END);
+	
 	if(gbFreeRun){
 		set_hudmessage(0, 255, 255, 0.02, -1.0);
 		show_hudmessage(0, "FreeRun!");
+		giFRTimeLeft=get_pcvar_num(gcvarFRTime);
+		if(giFRTimeLeft>0){
+			set_task(1.0, "freerunTimer", TASK_FREERUN_TIMER, _, _, "b");
+			set_task(float(giFRTimeLeft), "endFreeRun", TASK_FREERUN_END);
+		}
 	}
 	
+}
+public freerunTimer(){
+	giFRTimeLeft--;
+	if(giFRTimeLeft<=0){
+		remove_task(TASK_FREERUN_TIMER);
+		endFreeRun();
+		return;
+	}
+	set_hudmessage(0, 255, 255, 0.02, -1.0, 0, 0.0, 1.1, 0.0, 0.0, 4);
+	show_hudmessage(0, "FreeRun: %d", giFRTimeLeft);
+}
+public endFreeRun(){
+	gbFreeRun=false;
+	remove_task(TASK_FREERUN_TIMER);
+	set_hudmessage(0, 255, 255, 0.02, -1.0, 0, 0.0, 1.5, 0.0, 0.0, 4);
+	show_hudmessage(0, "%L", LANG_SERVER, "FREERUN_END");
+	ColorChat(0,GREEN, "[DR]^x01 %L",LANG_SERVER,"FREERUN_END");
 }
 count(VOTE_STATE){
 	new iCounter=0;
